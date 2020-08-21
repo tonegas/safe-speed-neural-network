@@ -4,38 +4,7 @@
 
 #include <cstdio>
 #include <vector>
-
-template <int Nin, int Nout>
-void linear(const double in[Nin],const double w[Nout][Nin],const double b[Nout], double out[Nout]){
-    for(int j = 0 ; j < Nout; j++){
-        out[j] = 0;
-        for(int i = 0 ; i < Nin ; i++){
-            out[j] += in[i]*w[j][i];
-        }
-        out[j] += b[j];
-    }
-}
-
-template <int Nin, int Nout>
-void linearSig(const double in[Nin],const double w[Nout][Nin],const double b[Nout], double out[Nout]){
-    for(int j = 0 ; j < Nout; j++){
-        out[j] = 0;
-        for(int i = 0 ; i < Nin ; i++){
-            out[j] += in[i]*w[j][i];
-        }
-        out[j] += b[j];
-    }
-    for(int j = 0 ; j < Nout; j++) {
-        out[j] = 1 / (1 + exp(-out[j]));
-    }
-}
-
-template <int Nin>
-void elu(const double in[Nin], double out[Nin]){
-    for(int i = 0; i < Nin ; i++ ){
-        out[i] = (in[i] > 0 ? in[i] : 0)-(((exp(in[i])-1)*(-in[i] > 0 ? -in[i] : 0))/in[i]);
-    }
-}
+#include "SSNN_cpp.h"
 
 double cc_ego_vel_w[10][1] = {{2.03104}, {2.03104}, {2.03104}, {2.03104}, {2.03104}, {2.03104}, {2.03104}, {2.03104}, {2.03104}, {2.03104}};
 double cc_ego_vel_b[10] = {0., -2.70805, -5.4161, -8.12415, -10.8322, -13.5403, -16.2483, -18.9564, -21.6644, -24.3725};
@@ -63,12 +32,19 @@ double SSNN(const double ego_vel_v, const double ped_long_disp_qs, const double 
     double vel_out[5];
     double ego_rcs_out[10];
 
-    linearSig<1,10>(ego_vel_v,cc_ego_vel_w,cc_ego_vel_b,ego_vel_out);
-    linearSig<1,10>(ped_long_disp_qs,cc_long_w,cc_long_b,long_out);
-    linearSig<1,10>(ped_lat_disp_ps,cc_lat_w,cc_lat_b,lat_out);
-    linearSig<1,5>(ped_angle_alpha,cc_ang_w,cc_ang_b,ang_out);
-    linearSig<1,5>(ped_vel_wt,cc_vel_w,cc_vel_b,vel_out);
-    linearSig<1,10>(ego_rcs_vt,cc_ego_rcs_w,cc_ego_rcs_b,ego_rcs_out);
+    double ego_vel_in[1]={ego_vel_v};
+    double long_in[1]={ped_long_disp_qs};
+    double lat_in[1]={ped_lat_disp_ps};
+    double ang_in[1]={ped_angle_alpha};
+    double vel_in[1]={ped_vel_wt};
+    double ego_rcs_in[1]={ego_rcs_vt};
+
+    linearSig<1,10>(ego_vel_in,cc_ego_vel_w,cc_ego_vel_b,ego_vel_out);
+    linearSig<1,10>(long_in,cc_long_w,cc_long_b,long_out);
+    linearSig<1,10>(lat_in,cc_lat_w,cc_lat_b,lat_out);
+    linearSig<1,5>(ang_in,cc_ang_w,cc_ang_b,ang_out);
+    linearSig<1,5>(vel_in,cc_vel_w,cc_vel_b,vel_out);
+    linearSig<1,10>(ego_rcs_in,cc_ego_rcs_w,cc_ego_rcs_b,ego_rcs_out);
 
     double data_in[50];
     std::copy(std::begin(ego_vel_out), std::end(ego_vel_out), std::begin(data_in));
