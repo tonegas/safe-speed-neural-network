@@ -72,3 +72,27 @@ double SSNN(const double ego_vel_v, const double ped_long_disp_qs, const double 
     }
     return action[max_ind];
 }
+
+double SSNNB(const double ego_vel_v, const double ped_long_disp_qs, const double ped_lat_disp_ps, const double ped_angle_alpha, const double ped_vel_wt, const double ego_rcs_vt){
+    int loop = 10;
+    double min_rcs = 1.0;
+    double max_rcs = 13.0;
+    double margin = 0.05;
+
+    double rcs;
+    double out;
+    while(abs(max_rcs-min_rcs) > margin && loop-- > 0){
+        rcs = (max_rcs + min_rcs)/2;
+        out = netRqSpeed(rcs, ped_long_disp_qs, ped_lat_disp_ps, ped_angle_alpha, ped_vel_wt, rcs);
+        if(out == -1){
+            max_rcs = rcs;
+        }else{
+            if(out == 1){
+                min_rcs = rcs;
+            }else{
+                max_rcs = min_rcs;
+            }
+        }
+    }
+    return rcs;
+}
